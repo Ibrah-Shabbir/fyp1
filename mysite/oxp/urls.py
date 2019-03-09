@@ -13,6 +13,6 @@ urlpatterns = [
     #path('get_specific_products/',csrf_exempt(views.get_specific_products),name='get_specific_products'),
     path('product/',csrf_exempt(views.product),name='product'),
     path('service/',csrf_exempt(views.service),name='service'),
-    path('raw/',views.raw,name='raw'),
+    #path('raw/',views.raw,name='raw'),
     path('category/',csrf_exempt(views.category),name='category'),
 ]

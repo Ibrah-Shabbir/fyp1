@@ -21,6 +21,7 @@ def DeleteImage(filename):
 def SaveImage(image,filename):
     image_flag = False
     if ( image == '' or  image == "0"):
+        print("image is empty")
         return image_flag
     else:
         data = base64.b64decode(image)

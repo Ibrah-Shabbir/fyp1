@@ -15,6 +15,9 @@ import os
 import export as export
 
 
+#URLL="http://192.168.0.105:8000/static/"
+#URLL="http://192.168.43.26:8000/static/"
+#URLL="http://192.168.0.105:8000/static/"
 URLL="http://192.168.8.101:8000/static/"
 #URLL="http://192.168.8.100:8000/static/"
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)

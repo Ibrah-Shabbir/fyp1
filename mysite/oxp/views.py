@@ -33,15 +33,58 @@ def index(request):
 
 
 def user(request):
+    if request.method == 'PUT':
+        json_data=json.loads(request.body)
+        try:
+            id=json_data['id']
+            user=User.objects.get(pk=id)
+            f_name=json_data['f_name']
+            l_name=json_data['l_name']
+            address=json_data['address']
+            city=json_data['city']
+            phoneNo=json_data['phoneNo']
+            User.objects.filter(id=id).update(f_name=f_name,l_name=l_name, address=address,
+                                                              city=city,phoneNo=phoneNo)
+            response = {
+                "data": "user updated",
+                'status_code': "200"
+            }
+            return HttpResponse(json.dumps(response), content_type="application/json")
+        except:
+            response = {
+                "data": "user not updated because user does not exist",
+                'status_code': "404"
+            }
+            return HttpResponse(json.dumps(response), content_type="application/json")
+
     if request.method=='DELETE':
         id=int(request.GET.get('id',0))
         try :
             print("user "+str(id))
             user=User.objects.get(pk=id)
+
+            #user.delete()
+            img_list=Images.objects.filter(product_id__user_id=id)
+
+            for x in img_list:
+                print(x.name)
+                DeleteImage(x.name)
+            #'''
             print("found")
+            user.delete()
+            response = {
+                "data": "user deleted",
+                'status_code': "200"
+            }
+            return HttpResponse(json.dumps(response), content_type="application/json")
 
         except:
             print("not found")
+            response = {
+                "data": "user not deleted",
+                'status_code': "404"
+            }
+            return HttpResponse(json.dumps(response), content_type="application/json")
 
 
 
@@ -63,6 +106,8 @@ def login(request):
             response_dict['id']=user.id
             response_dict['email']=user.email
             response_dict['contact_no']=user.phoneNo
+            response_dict['city']=user.city
+            response_dict['address']=user.address
             list.append(response_dict)
             response={
                 "data":list,

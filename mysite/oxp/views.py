@@ -268,6 +268,8 @@ def product(request):
                         response_dict['price'] = x.price
                         response_dict['quantity'] = x.quantity
                         response_dict['category'] = x.category.description
+                        response_dict['contact_no'] = x.user.phoneNo
+
                         products_list.append(response_dict)
                  response = {
                          'data': products_list,
@@ -537,7 +539,7 @@ def service(request):
                             response_dict['user'] = x.user.email
                             response_dict['name'] = x.name
                             response_dict['description'] = x.description
-                            response_dict['is_active'] = x.is_active
+                            #response_dict['is_active'] = x.is_active
                             service_list.append(response_dict)
                         response = {
                             'data': service_list,
@@ -568,7 +570,8 @@ def service(request):
                     response_dict['user'] = x.user.email
                     response_dict['name'] = x.name
                     response_dict['description'] = x.description
-                    response_dict['is_active'] = x.is_active
+                    response_dict['contact_no'] = x.user.phoneNo
+                   # response_dict['is_active'] = x.is_active
                     service_list.append(response_dict)
                 response = {
                     'data': service_list,
@@ -583,11 +586,12 @@ def service(request):
             email = json_data['email']
             name = json_data['name']
             description = json_data['description']
-            is_active = bool(json_data['is_active'])
-            print(is_active)
+            #is_active = bool(json_data['is_active'])
+            #print(is_active)
             if User.objects.filter(email__iexact=email).exists():
                     _user = User.objects.get(email=email)
-                    created_service = Service.objects.create(user=_user, name=name, description=description,is_active=is_active)
+                   # created_service = Service.objects.create(user=_user, name=name, description=description,is_active=is_active)
+                    created_service = Service.objects.create(user=_user, name=name, description=description)
                     response = {
                         "string_response": "SERVICE CREATED",
                         'status_code': "200",
@@ -613,9 +617,10 @@ def service(request):
                     if Service.objects.filter(id=id,user_id=user_id).exists():
                         name = json_data['name']
                         description = json_data['description']
-                        is_active = bool(json_data['is_active'])
-                        count = Service.objects.filter(id=json_data['id']).update(name=name, description=description,
-                                                                                  is_active=is_active)
+                        #is_active = bool(json_data['is_active'])
+                        #count = Service.objects.filter(id=json_data['id']).update(name=name, description=description,
+                         #                                                         is_active=is_active)
+                        count = Service.objects.filter(id=json_data['id']).update(name=name, description=description)
                         updated = Service.objects.filter(id=id)  # error comes by using get for x in updated:
                         if count == 1:
                             print("count is 1")

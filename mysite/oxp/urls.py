@@ -10,6 +10,7 @@ urlpatterns = [
     #path('update/', csrf_exempt(views.update_product), name='update_product'),
     path('login/', csrf_exempt(views.login), name="Login"),
     path('signup/', csrf_exempt(views.signup), name="Signup"),
+    path('user/', csrf_exempt(views.user), name='user'),
     #path('get_specific_products/',csrf_exempt(views.get_specific_products),name='get_specific_products'),
     path('product/',csrf_exempt(views.product),name='product'),
     path('service/',csrf_exempt(views.service),name='service'),

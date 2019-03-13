@@ -15,10 +15,7 @@ import os
 import export as export
 
 
-#URLL="http://192.168.0.105:8000/static/"
-URLL="http://192.168.43.10:8000/static/"
-#URLL="http://192.168.0.105:8000/static/"
-#URLL="http://192.168.8.101:8000/static/"
+URLL="http://192.168.8.101:8000/static/"
 #URLL="http://192.168.8.100:8000/static/"
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -57,7 +54,7 @@ DEBUG = True
 
 
 #ALLOWED_HOSTS = ['10.0.75.1', '127.0.0.1']
-ALLOWED_HOSTS = ['*','192.168.43.10']
+ALLOWED_HOSTS = ['*','192.168.8.101']
 
 DATE_INPUT_FORMATS = ['%d-%m-%Y']
 # Application definition

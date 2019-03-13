@@ -32,6 +32,19 @@ def index(request):
     return HttpResponse("Hello, world. You're at the student index in FYPPPPPP111111111.")
 
 
+def user(request):
+    if request.method=='DELETE':
+        id=int(request.GET.get('id',0))
+        try :
+            print("user "+str(id))
+            user=User.objects.get(pk=id)
+            print("found")
+
+        except:
+            print("not found")
+
+
+
 def login(request):
     if request.method == "POST":
         json_data = json.loads(request.body)
@@ -138,28 +151,71 @@ def category(request):
 
 def product(request):
     if request.method=='GET':
-        user_id = int(request.GET.get('user_id', 0))
-        print('GETT')
-        except_string="user does not exist"
-        if user_id > 0:
-            try:
-                user = User.objects.get(pk=user_id)
-                print (user.id)
-                if Product.objects.filter(user_id__exact=user_id).exists():
-                    print(user.id)
-                    user_products=Product.objects.filter(user_id=user_id)
-                    products_list=[]
+        if not request.GET.get('id'):
+            user_id = int(request.GET.get('user_id', 0))
+            print('GETT')
+            except_string="user does not exist"
+            if user_id > 0:
+                try:
+                    user = User.objects.get(pk=user_id)
+                    print (user.id)
+                    if Product.objects.filter(user_id__exact=user_id).exists():
+                        print(user.id)
+                        user_products=Product.objects.filter(user_id=user_id)
+                        products_list=[]
 
-                    for x in user_products:
+                        for x in user_products:
 
+                            response_dict = dict()
+                            try:
+                                product_image = Images.objects.get(product_id=x.id)
+                                response_dict['image_url']=str(product_image.get_image_url())
+                                print("TRYYYYYYYY")
+                            except Images.DoesNotExist:
+                                category_image=Category.objects.get(pk=x.category_id)
+                                print("EXCEPTTTTTTTTTTTTTT DOES NOT EXIST")
+                            response_dict['ID'] = x.id
+                            response_dict['user'] = x.user.email
+                            response_dict['name'] = x.name
+                            response_dict['description'] = x.description
+                            response_dict['price'] = x.price
+                            response_dict['quantity'] = x.quantity
+                            response_dict['category'] = x.category.description
+                            products_list.append(response_dict)
+                        response = {
+                            'data': products_list,
+                            'status_code': "200"
+                        }
+                        return HttpResponse(json.dumps(response), content_type="application/json")
+
+                    else:
+                        response = {
+                            'data': "there is no prduct against the user id",
+                            'status_code': "404"
+                        }
+                        return HttpResponse(json.dumps(response), content_type="application/json")
+                except User.DoesNotExist:
+                    response = {
+                        'data': except_string,
+                        'status_code': "404"
+                    }
+                    return HttpResponse(json.dumps(response), content_type="application/json")
+                return HttpResponse("length is 1")
+
+            else:
+                 products_list=[]
+                 active_products = Product.objects.filter(is_active=True)
+                 for x in active_products:
                         response_dict = dict()
                         try:
-                            product_image = Images.objects.get(product_id=x.id)
-                            response_dict['image_url']=str(product_image.get_image_url())
-                            print("TRYYYYYYYY")
+                             product_image = Images.objects.get(product_id=x.id)
+                             response_dict['image_url'] = str(product_image.get_image_url())
+                             print("TRYYYYYYYY")
+
                         except Images.DoesNotExist:
-                            category_image=Category.objects.get(pk=x.category_id)
-                            print("EXCEPTTTTTTTTTTTTTT DOES NOT EXIST")
+                             category_image = Category.objects.get(pk=x.category_id)
+                             #response_dict['image_url'] = category_image.get_image_url()
+                             print("EXCEPTTTTTTTTTTTTTT DOES NOT EXIST")
                         response_dict['ID'] = x.id
                         response_dict['user'] = x.user.email
                         response_dict['name'] = x.name
@@ -168,54 +224,45 @@ def product(request):
                         response_dict['quantity'] = x.quantity
                         response_dict['category'] = x.category.description
                         products_list.append(response_dict)
-                    response = {
-                        'data': products_list,
-                        'status_code': "200"
-                    }
-                    return HttpResponse(json.dumps(response), content_type="application/json")
-
-                else:
-                    response = {
-                        'data': "there is no prduct against the user id",
-                        'status_code': "404"
-                    }
-                    return HttpResponse(json.dumps(response), content_type="application/json")
-            except User.DoesNotExist:
-                response = {
-                    'data': except_string,
-                    'status_code': "404"
-                }
-                return HttpResponse(json.dumps(response), content_type="application/json")
-            return HttpResponse("length is 1")
-
+                 response = {
+                         'data': products_list,
+                         'status_code': "200"
+                 }
+                 return HttpResponse(json.dumps(response), content_type="application/json")
+            return HttpResponse("GETT")
         else:
-             products_list=[]
-             active_products = Product.objects.filter(is_active=True)
-             for x in active_products:
-                    response_dict = dict()
-                    try:
-                         product_image = Images.objects.get(product_id=x.id)
-                         response_dict['image_url'] = str(product_image.get_image_url())
-                         print("TRYYYYYYYY")
-
-                    except Images.DoesNotExist:
-                         category_image = Category.objects.get(pk=x.category_id)
-                         #response_dict['image_url'] = category_image.get_image_url()
-                         print("EXCEPTTTTTTTTTTTTTT DOES NOT EXIST")
-                    response_dict['ID'] = x.id
-                    response_dict['user'] = x.user.email
-                    response_dict['name'] = x.name
-                    response_dict['description'] = x.description
-                    response_dict['price'] = x.price
-                    response_dict['quantity'] = x.quantity
-                    response_dict['category'] = x.category.description
-                    products_list.append(response_dict)
-             response = {
-                     'data': products_list,
-                     'status_code': "200"
-             }
-             return HttpResponse(json.dumps(response), content_type="application/json")
-        return HttpResponse("GETT")
+            id=request.GET.get('id')
+            print(str(id)+"in id")
+            if Product.objects.filter(id=id).exists():
+                product = []
+                product_deets=Product.objects.get(pk=id)
+                response_dict = dict()
+                try:
+                        product_image = Images.objects.get(product_id=id)
+                        response_dict['image_url'] = str(product_image.get_image_url())
+                        print("TRYYYYYYYY")
+                except Images.DoesNotExist:
+                        print("EXCEPTTTTTTTTTTTTTT DOES NOT EXIST")
+                response_dict['ID'] = product_deets.id
+                response_dict['user'] = product_deets.user.email
+                response_dict['name'] = product_deets.name
+                response_dict['description'] = product_deets.description
+                response_dict['price'] = product_deets.price
+                response_dict['quantity'] = product_deets.quantity
+                response_dict['category'] = product_deets.category.description
+                product.append(response_dict)
+                response = {
+                    'data': product,
+                    'status_code': "200"
+                }
+                print(str(response))
+                return HttpResponse(json.dumps(response), content_type="application/json")
+            response = {
+                'data': "product_id ae ha",
+                'status_code': "404"
+            }
+            return HttpResponse(json.dumps(response), content_type="application/json")
+        return HttpResponse("length is 1")
 
     elif request.method == 'POST':
         print('POSTT')
@@ -273,65 +320,108 @@ def product(request):
         if request.method == 'PUT':
             json_data = json.loads(request.body)
             id=json_data['id']
+            #id=request.GET.get('id')
+            print(str(id))
+            #user_id=request.GET.get('user_id')
+            #image=request.GET.get('image')
             user_id=json_data['user_id']
             image=json_data['image']
             if User.objects.filter(id=user_id).exists():
              if Product.objects.filter(id=id, user_id=user_id).exists():
+                 print("product+user found")
                  filename=FileName()
                  if SaveImage(image,filename):
 
                     print("nooooooooooooooooooooo")
-                    print(image)
+                    #print(image)
                     if Images.objects.filter(product_id=id).exists():
-                        print ("found in PUTT request "+id)
+                        print ("found in PUTT request "+str(id))
                         image_obj=Images.objects.get(product_id=id)
                         print(image_obj.name)
                         DeleteImage(image_obj.name)
                         count0 = Images.objects.filter(product_id=id).update(name=filename)
+                        try:
+                            cat_obj = Category.objects.get(description=json_data['category'])
+                            count=Product.objects.filter(id=id).update(name=json_data['name'], price=int(json_data['price']),description=json_data['description'], quantity=int(json_data['quantity']))
+                            #count=Product.objects.filter(id=id).update(name=request.GET.get('name'), price=int(request.GET.get('price')),description=request.GET.get('description'), quantity=int(request.GET.get('quantity')))
+                            print("time is "+str(datetime.date.today()))
+                            # products.update()
+                            updated=Product.objects.filter(id=json_data['id'])  #error comes by using get for x in updated:
 
-                        count=Product.objects.filter(id=id).update(name=json_data['name'], price=json_data['price'],description=json_data['description'], quantity=json_data['quantity'])
-                        print("time is "+str(datetime.date.today()))
-                        # products.update()
-                        updated=Product.objects.filter(id=json_data['id'])  #error comes by using get for x in updated:
+                            if count==1:
+                                    ''''
+                                    print("count is 1")
+                                    data = {}
+                                    for x in updated:
+        
+                                         data['id']=x.id
+                                         data['name']=x.name
+                                         data['description']=x.description
+                                         data['quantity']=x.quantity
+                                         data['email']=x.user.email
+                                
+                                   
+                                    response = {"string_response":data ,
+                                        'status_code': "200",
+                                        }
+                                    return HttpResponse(json.dumps(response), content_type="application/json")
+                                    '''
+                                    response = {"string_response": "PRODUCT+IMAGE UPDATED",
+                                                'status_code': "200",
+                                                }
+                                    return HttpResponse(json.dumps(response), content_type="application/json")
+                            else:
+                                    string ="updated more than one products"
+                                    response = {"string_response": string,
+                                        'status_code': "404",
+                                    }
 
-                        if count==1:
-                            print("count is 1")
-                            data = {}
-                            for x in updated:
-
-                                 data['id']=x.id
-                                 data['name']=x.name
-                                 data['description']=x.description
-                                 data['quantity']=x.quantity
-                                 data['email']=x.user.email
-                        
-                           
-                            response = {"string_response":data ,
-                                'status_code': "200",
-                                }
-                            return HttpResponse(json.dumps(response), content_type="application/json")
-                        else:
-                            string ="updated more than one products"
-                            response = {"string_response": string,
-                                'status_code': "404",
+                                    return HttpResponse(json.dumps(response), content_type="application/json")
+                        except Category.DoesNotExist:
+                            print("category does not exist ")
+                            response = {
+                             'string_response': "failed to update product because category does not exists",
+                             'status_code': "404"
                             }
-
-                        return HttpResponse(json.dumps(response), content_type="application/json")
+                            return HttpResponse(json.dumps(response), content_type="application/json")
                  else:
-                     return HttpResponse("save image else", content_type="application/json")
-                 return HttpResponse("helll", content_type="application/json")
+                     print("else of SAVE IMAGE found")
+                     print (json_data['name'])
+                     print (str(json_data['price']))
+                     print (json_data['description'])
+                     print (str(json_data['quantity']))
+                     print (str(json_data['category']))
+                     try:
+                        cat_obj = Category.objects.get(description=json_data['category'])
+                        count=Product.objects.filter(id=id).update(name=json_data['name'], price=int(json_data['price']),description=json_data['description'], quantity=int(json_data['quantity']),category=cat_obj)
+                        updated = Product.objects.filter(id=json_data['id'])
+                        print("category exist ")
+                        string = "PRODUCT UPDATED"
+                        response = {"string_response": string,
+                                 'status_code': "200",
+                                 }
+                     except Category.DoesNotExist:
+                         print("category does not exist ")
+                         response = {
+                             'string_response': "failed to update product because category does not exists",
+                             'status_code': "404"
+                         }
+                         return HttpResponse(json.dumps(response), content_type="application/json")
+                     return HttpResponse(json.dumps(response), content_type="application/json")
+                 return HttpResponse(json.dumps("helll"), content_type="application/json")
 
              else:
+                print("else of product+user found")
                 string = "product with ID " + id + " does not exist"
                 print(string)
-                response={"error_reason":string,
+                response={"string_response":string,
                      'status_code':"404",
                  }
                 return HttpResponse(json.dumps(response), content_type="application/json")
             else:
                 string = "user does not exist"
                 print(string)
-                response = {"error_reason": string,
+                response = {"string_response": string,
                             'status_code': "404",
                             }
                 return HttpResponse(json.dumps(response), content_type="application/json")
@@ -402,7 +492,7 @@ def service(request):
                             response_dict['user'] = x.user.email
                             response_dict['name'] = x.name
                             response_dict['description'] = x.description
-                            response_dict['is_active'] = x.is_active
+                            #response_dict['is_active'] = x.is_active
                             service_list.append(response_dict)
                         response = {
                             'data': service_list,
@@ -445,14 +535,16 @@ def service(request):
         elif request.method == 'POST':
             print('POSTT')
             json_data = json.loads(request.body)
+
             email = json_data['email']
             name = json_data['name']
             description = json_data['description']
-            is_active = bool(json_data['is_active'])
-            print(is_active)
+           # is_active = bool(json_data['is_active'])
+            #print(is_active)
             if User.objects.filter(email__iexact=email).exists():
                     _user = User.objects.get(email=email)
-                    created_service = Service.objects.create(user=_user, name=name, description=description,is_active=is_active)
+                   # created_service = Service.objects.create(user=_user, name=name, description=description,is_active=is_active)
+                    created_service = Service.objects.create(user=_user, name=name, description=description)
                     response = {
                         "string_response": "SERVICE CREATED",
                         'status_code': "200",
@@ -478,9 +570,10 @@ def service(request):
                     if Service.objects.filter(id=id,user_id=user_id).exists():
                         name = json_data['name']
                         description = json_data['description']
-                        is_active = bool(json_data['is_active'])
-                        count = Service.objects.filter(id=json_data['id']).update(name=name, description=description,
-                                                                                  is_active=is_active)
+                       # is_active = bool(json_data['is_active'])
+                        #count = Service.objects.filter(id=json_data['id']).update(name=name, description=description,
+                         #                                                         is_active=is_active)
+                        count = Service.objects.filter(id=json_data['id']).update(name=name, description=description)
                         updated = Service.objects.filter(id=id)  # error comes by using get for x in updated:
                         if count == 1:
                             print("count is 1")

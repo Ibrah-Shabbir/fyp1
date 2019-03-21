@@ -72,16 +72,15 @@ class Images(models.Model):
 
 class Post(models.Model):
     #id = models.AutoField(primary_key=True, unique=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     description = models.CharField(max_length=50)
-    likes = models.CharField(max_length=50)
+    likes = models.IntegerField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 class Comment(models.Model):
     #id = models.AutoField(primary_key=True, unique=True)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    name = models.CharField(max_length=50)
     description = models.CharField(max_length=50)
 
 class Favorite(models.Model):

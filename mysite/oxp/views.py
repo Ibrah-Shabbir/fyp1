@@ -10,7 +10,7 @@ from Lib import os, base64
 #from django.core.files.base import ContentFile
 from django.conf import settings
 from PIL import Image
-from .models import User, Category, Product, Images, Service
+from .models import User, Category, Product, Images, Service, Post, Comment
 from .myUtils import *
 
 
@@ -692,4 +692,353 @@ def service(request):
         else:
             return HttpResponse("PRODUCT REQUEST METHOD UNIDENTIFIED IN PRODUCT")
 
+
+def post(request):
+    if request.method == 'GET':
+        user_id = int(request.GET.get('user_id', 0))
+        print('GETT POST')
+        except_string = "user does not exist"
+        if user_id > 0:
+            try:
+                user = User.objects.get(pk=user_id)
+                print(user.id)
+                if Post.objects.filter(user_id__exact=user_id).exists():
+                    print(user.id)
+                    user_post = Post.objects.filter(user_id=user_id)
+                    post_list = []
+                    for x in user_post:
+                        response_dict = dict()
+                        response_dict['id'] = x.id
+                        response_dict['user'] = x.user.email
+                        response_dict['name'] = x.name
+                        response_dict['description'] = x.description
+                        response_dict['likes'] = x.likes
+                        # response_dict['is_active'] = x.is_active
+                        post_list.append(response_dict)
+                    response = {
+                        'data': post_list,
+                        'status_code': "200"
+                    }
+                    return HttpResponse(json.dumps(response), content_type="application/json")
+
+                else:
+                    response = {
+                        'data': "there is no post against the user id",
+                        'status_code': "404"
+                    }
+                    return HttpResponse(json.dumps(response), content_type="application/json")
+            except User.DoesNotExist:
+                response = {
+                    'data': except_string,
+                    'status_code': "404"
+                }
+                return HttpResponse(json.dumps(response), content_type="application/json")
+            return HttpResponse("length is 1")
+
+        else:
+            post_list = []
+            active_post = Post.objects.filter()
+            for x in active_post:
+                response_dict = dict()
+                response_dict['id'] = x.id
+                response_dict['user'] = x.user.email
+                response_dict['name'] = x.name
+                response_dict['description'] = x.description
+                response_dict['likes'] = x.likes
+                #response_dict['contact_no'] = x.user.phoneNo
+                # response_dict['is_active'] = x.is_active
+                post_list.append(response_dict)
+            response = {
+                'data': post_list,
+                'status_code': "200"
+            }
+            return HttpResponse(json.dumps(response), content_type="application/json")
+        return HttpResponse("GETT")
+
+    elif request.method == 'POST':
+        print('POSTT POST')
+        json_data = json.loads(request.body)
+        email = json_data['email']
+        name = json_data['name']
+        description = json_data['description']
+        likes = json_data['likes']
+        # is_active = bool(json_data['is_active'])
+        # print(is_active)
+        if User.objects.filter(email__iexact=email).exists():
+            _user = User.objects.get(email=email)
+            # created_service = Service.objects.create(user=_user, name=name, description=description,is_active=is_active)
+            created_post = Post.objects.create(user=_user, name=name, description=description,likes=likes)
+            response = {
+                "string_response": "POST CREATED",
+                'status_code': "200",
+            }
+            return HttpResponse(json.dumps(response), content_type="application/json")
+        else:
+            response = {
+                "string_response": "user having email '" + email + "' doesn't exist",
+                'status_code': "404",
+            }
+            return HttpResponse(json.dumps(response), content_type="application/json")
+        return HttpResponse("POSTT")
+    elif request.method == 'PUT':
+        print('PUTT POST')
+        json_data = json.loads(request.body)
+        user_id = json_data['user_id']
+        try:
+            user = User.objects.get(pk=user_id)
+            print(user.id)
+            id = json_data['id']
+            if Post.objects.filter(id=id, user_id=user_id).exists():
+                print("in oisr")
+                name = json_data['name']
+                description = json_data['description']
+                likes = json_data['likes']
+                # is_active = bool(json_data['is_active'])
+                # count = Service.objects.filter(id=json_data['id']).update(name=name, description=description,
+                #                                                         is_active=is_active)
+                count = Post.objects.filter(id=json_data['id']).update(name=name, description=description, likes=likes,user=user)
+                updated = Post.objects.filter(id=id)  # error comes by using get for x in updated:
+                if count == 1:
+                    print("count is 1")
+                    data = {}
+                    for x in updated:
+                        data['id'] = x.id
+                        data['name'] = x.name
+                        data['description'] = x.description
+                        data['likes'] = x.likes
+                       # data['is_active'] = x.is_active
+                        data['email'] = x.user.email
+
+
+                        response = {"string_response": data,
+                                    'status_code': "200",
+                                    }
+                        return HttpResponse(json.dumps(response), content_type="application/json")
+                else:
+                    response = {"string_response": "updated more than one products",
+                                'status_code': "404",
+                                }
+                    return HttpResponse(json.dumps(response), content_type="application/json")
+
+            else:
+                string = "CANT'T UPDATE POST BECAUSE USER DOES NOT HAVE THIS POST"
+                response = {"string_response": string,
+                            'status_code': "404",
+                            }
+                return HttpResponse(json.dumps(response), content_type="application/json")
+        except User.DoesNotExist:
+            response = {
+                'data': "USER DOES NOT EXIST",
+                'status_code': "404"}
+
+            return HttpResponse(json.dumps(response), content_type="application/json")
+        response = {"string_response": "ERROR DETECTED WHILE POST PUT REQUEST",
+                    'status_code': "404",
+                    }
+        return HttpResponse(json.dumps(response), content_type="application/json")
+
+    elif request.method == 'DELETE':
+        print('DELETEE')
+        user_id = request.GET.get('user_id')
+        id = request.GET.get('id')
+        print(id)
+        print(user_id)
+        if Post.objects.filter(id=id, user_id=user_id).exists():
+            print(id)
+            post = Post.objects.get(id=id)
+            post.delete()
+            response = {
+                "string_response": "POST DELETED",
+                "status_code": "200"
+            }
+            return HttpResponse(json.dumps(response), content_type="application/json")
+
+        else:
+            string = "CANT'T DELETE POST BECAUSE USER DOES NOT HAVE THIS POST"
+            response = {
+                "string_response": string,
+                "status_code": "404"
+            }
+            return HttpResponse(json.dumps(response), content_type="application/json")
+        response = {
+            "string_response": "DELETE REQUEST COULDN'T BE ACCOMPLISHED",
+            "status_code": "200"
+        }
+
+        return HttpResponse(json.dumps(response), content_type="application/json")
+    else:
+        return HttpResponse("DELETE REQUEST METHOD UNIDENTIFIED IN DELETE")
+
+def comment(request):
+        if request.method == 'GET':
+            user_id = int(request.GET.get('user_id', 0))
+            print('GETT')
+            print(user_id)
+            except_string = "user does not exist"
+            post_id=request.GET.get('post_id',0)
+            print(post_id)
+
+            if user_id > 0:
+                try:
+                   user = User.objects.get(pk=user_id)
+                   try:
+                    post = Post.objects.get(pk=post_id)
+                    print(post.id)
+                    if Comment.objects.filter(user_id__exact=user_id).filter(post_id__exact=post_id).exists():
+                        print(user.id)
+                        user_comment = Comment.objects.filter(user_id=user_id)
+                        comment_list = []
+                        for x in user_comment:
+                            response_dict = dict()
+                            response_dict['id'] = x.id
+                            response_dict['user'] = x.user.email
+                            response_dict['post_id'] = x.post.id
+
+                            response_dict['description'] = x.description
+                            # response_dict['is_active'] = x.is_active
+                            comment_list.append(response_dict)
+                        response = {
+                            'data': comment_list,
+                            'status_code': "200"
+                        }
+                        return HttpResponse(json.dumps(response), content_type="application/json")
+
+                    else:
+                        response = {
+                            'data': "there is no comment against the user id",
+                            'status_code': "404"
+                        }
+                        return HttpResponse(json.dumps(response), content_type="application/json")
+                   except User.DoesNotExist:
+                       response = {
+                           'data': except_string,
+                           'status_code': "404"
+                       }
+                       return HttpResponse(json.dumps(response), content_type="application/json")
+                   return HttpResponse("length is 1")
+                except  Post.DoesNotExist:
+                    print("exeottttttt")
+
+
+
+
+            else:
+                print("User does not exist")
+
+        elif request.method == 'POST':
+            print('POSTT COMMENT')
+            json_data = json.loads(request.body)
+            email = json_data['email']
+            post_id=json_data['post_id']
+            description = json_data['description']
+
+            # is_active = bool(json_data['is_active'])
+            # print(is_active)
+            if User.objects.filter(email__iexact=email).exists():
+                _user = User.objects.get(email=email)
+
+                # created_service = Service.objects.create(user=_user, name=name, description=description,is_active=is_active)
+                created_post = Comment.objects.create(user=_user, post_id=post_id, description=description)
+                response = {
+                    "string_response": "COMMENT ADDED",
+                    'status_code': "200",
+                }
+                return HttpResponse(json.dumps(response), content_type="application/json")
+            else:
+                response = {
+                    "string_response": "user having email '" + email + "' doesn't exist",
+                    'status_code': "404",
+                }
+                return HttpResponse(json.dumps(response), content_type="application/json")
+            return HttpResponse("POSTT")
+
+        elif request.method == 'PUT':
+            print('PUTT')
+            json_data = json.loads(request.body)
+            user_id = json_data['user_id']
+            post_id=json_data['post_id']
+            try:
+                user = User.objects.get(pk=user_id)
+                post=Post.objects.get(pk=post_id)
+                print(user.id)
+                print(post.id)
+                id = json_data['id']
+
+                if Comment.objects.filter(id=id, user_id=user_id,post_id=post_id ).exists():
+
+                    description = json_data['description']
+                    # is_active = bool(json_data['is_active'])
+                    # count = Service.objects.filter(id=json_data['id']).update(name=name, description=description,
+                    #                                                         is_active=is_active)
+                    count = Comment.objects.filter(id=json_data['id']).update(description=description)
+                    updated = Comment.objects.filter(id=id)  # error comes by using get for x in updated:
+                    if count == 1:
+                        print("count is 1")
+                        data = {}
+                        for x in updated:
+                            data['id'] = x.id
+
+                            data['description'] = x.description
+
+                            data['email'] = x.user.email
+
+                            response = {"string_response": data,
+                                        'status_code': "200",
+                                        }
+                            return HttpResponse(json.dumps(response), content_type="application/json")
+                    else:
+                        response = {"string_response": "updated more than one comments",
+                                    'status_code': "404",
+                                    }
+                        return HttpResponse(json.dumps(response), content_type="application/json")
+
+                else:
+                    string = "CANT'T UPDATE COMMENT BECAUSE USER DOES NOT HAVE THIS COMMENT"
+                    response = {"string_response": string,
+                                'status_code': "404",
+                                }
+                    return HttpResponse(json.dumps(response), content_type="application/json")
+            except User.DoesNotExist:
+                response = {
+                    'data': "USER DOES NOT EXIST",
+                    'status_code': "404"}
+
+                return HttpResponse(json.dumps(response), content_type="application/json")
+            response = {"string_response": "ERROR DETECTED WHILE COMMENT PUT REQUEST",
+                        'status_code': "404",
+                        }
+            return HttpResponse(json.dumps(response), content_type="application/json")
+
+        elif request.method == 'DELETE':
+            print('DELETEE')
+            user_id = request.GET.get('user_id')
+            #post_id=request.Get.get('post_id')
+            id = request.GET.get('id')
+            print(id)
+            print(user_id)
+            if Comment.objects.filter(id=id, user_id=user_id).exists():
+                print(id)
+                comment = Comment.objects.get(id=id)
+                comment.delete()
+                response = {
+                    "string_response": "COMMENT DELETED",
+                    "status_code": "200"
+                }
+                return HttpResponse(json.dumps(response), content_type="application/json")
+
+            else:
+                string = "CANT'T DELETE COMMENT BECAUSE USER DOES NOT HAVE THIS COMMENT"
+                response = {
+                    "string_response": string,
+                    "status_code": "404"
+                }
+                return HttpResponse(json.dumps(response), content_type="application/json")
+            response = {
+                "string_response": "DELETE REQUEST COULDN'T BE ACCOMPLISHED",
+                "status_code": "200"
+            }
+
+            return HttpResponse(json.dumps(response), content_type="application/json")
+        else:
+            return HttpResponse("COMMENT REQUEST METHOD UNIDENTIFIED IN COMMENT")
 
